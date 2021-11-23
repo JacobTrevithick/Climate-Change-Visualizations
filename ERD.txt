@@ -1,0 +1,47 @@
+countries
+-----
+country_id INT PK
+country_long TEXT
+
+
+power_plants_info
+-----
+country_id INT FK >- countries.country_id
+plant_id INT FK - power_plant_names.plant_id
+capacity_mw DECIMAL
+latitude DECIMAL
+longitude DECIMAL
+primary_fuel TEXT
+renewable BOOL
+
+
+power_plant_names
+-----
+plant_id INT PK
+name TEXT
+
+
+power_plant_gen_stats
+-----
+plant_id INT FK - power_plant_names.plant_id
+generation_gwh_2013 DECIMAL
+generation_gwh_2014 DECIMAL
+generation_gwh_2015 DECIMAL
+generation_gwh_2016 DECIMAL
+generation_gwh_2017 DECIMAL
+generation_gwh_2018 DECIMAL
+generation_gwh_2019 DECIMAL
+generation_data_source TEXT
+estimated_generation_gwh_2013 DECIMAL
+estimated_generation_gwh_2014 DECIMAL
+estimated_generation_gwh_2015 DECIMAL
+estimated_generation_gwh_2016 DECIMAL
+estimated_generation_gwh_2017 DECIMAL
+
+
+greenhouse_gases
+-----
+country_id INT FK >- countries.country_id
+category_short TEXT
+year INT
+value DECIMAL
