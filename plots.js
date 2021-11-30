@@ -162,6 +162,44 @@ Plotly.newPlot('bar', data, layout)
 
 
 
+//Radar test chart from chart.js library
+const radarData = {
+  labels: ['Hydro', 
+  'Solar', 
+  'Gas', 
+  'Wind', 
+  'Waste',
+  'Biomass', 
+  'Wave and Tidal', 
+  'Geothermal', 
+  'Storage', 'Cogeneration', 'Nuclear'
+  ],
+  datasets: [{
+    label: 'Number of Power Plants With Renewable Energy',
+    data: [65, 59, 75, 81, 56, 80, 40, 50, 65, 25, 37],
+    fill: true,
+    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+    borderColor: 'rgb(255, 99, 132)',
+    pointBackgroundColor: 'rgb(255, 99, 132)',
+    pointBorderColor: '#fff',
+    pointHoverBackgroundColor: '#fff',
+    pointHoverBorderColor: 'rgb(255, 99, 132)'
+  }]
+};
 
+const config = {
+  type: 'radar',
+  data: radarData,
+  options: {
+    elements: {
+      line: {
+        borderWidth: 3
+      }
+    }
+  },
+};
 
-
+const radar = new Chart(
+  document.getElementById('radar'),
+  config
+);
