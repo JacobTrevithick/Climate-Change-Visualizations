@@ -68,8 +68,8 @@ d3.json(flaskGlobalViewURL).then(function (response) {
             title: "Gigawatt hours (GWh)"
             },
         xaxis: {
-            title: "Year",
-            range: [2012,2018]
+            range: [2012,2018],
+            title: "Year"
         }
     };
 
