@@ -29,7 +29,7 @@ d3.json(flaskGlobalViewURL).then(function (response) {
     };
 
     var trace_gen_clean = {
-        x: response.years,
+        x: response.pp_years,
         y: response.generated_clean,
         text: response.generated_clean,
         marker: {color: '#8FBC8F'},
@@ -38,7 +38,7 @@ d3.json(flaskGlobalViewURL).then(function (response) {
     };
 
     var trace_est_dirty = {
-        x: response.years,
+        x: response.pp_years,
         y: response.estimated_dirty,
         text: response.estimated_dirty,
         marker: {color: '#696969'},
@@ -47,7 +47,7 @@ d3.json(flaskGlobalViewURL).then(function (response) {
     };
 
     var trace_gen_dirty = {
-        x: response.years,
+        x: response.pp_years,
         y: response.generated_dirty,
         text: response.generated_dirty,
         marker: {color: '#DCDCDC'},
@@ -57,19 +57,20 @@ d3.json(flaskGlobalViewURL).then(function (response) {
 
     var barData = [trace_gen_clean, trace_gen_dirty, trace_est_clean, trace_est_dirty];
 
-    var region = 'Global'
+    console.log(barData);
+    var region = 'Global';
 
     var layout = {
         barmode: 'group',
         // Add country name here
         title: `Energy produced by power plants in the ${region}`,
         yaxis: {
-        title: "Gigawatt hours (GWh)"
-        },
+            title: "Gigawatt hours (GWh)"
+            },
         xaxis: {
             range: [2012,2018],
             title: "Year"
-        },
+        }
     };
 
     Plotly.newPlot('bar', barData, layout);
@@ -151,15 +152,15 @@ d3.json(flaskGlobalViewURL).then(function (response) {
     const radarData = {
         labels: response.plant_labels,
         datasets: [{
-        label: 'Number of Total Power Plants',
-        data: response.plant_counts_split,
-        fill: true,
-        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-        borderColor: 'rgb(255, 99, 132)',
-        pointBackgroundColor: 'rgb(255, 99, 132)',
-        pointBorderColor: '#fff',
-        pointHoverBackgroundColor: '#fff',
-        pointHoverBorderColor: 'rgb(255, 99, 132)'
+            label: 'Number of Total Power Plants',
+            data: response.plant_counts_split,
+            fill: true,
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            borderColor: 'rgb(255, 99, 132)',
+            pointBackgroundColor: 'rgb(255, 99, 132)',
+            pointBorderColor: '#fff',
+            pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: 'rgb(255, 99, 132)'
         }]
     };
     
@@ -167,16 +168,16 @@ d3.json(flaskGlobalViewURL).then(function (response) {
         type: 'radar',
         data: radarData,
         options: {
-        elements: {
-            line: {
-            borderWidth: 3
+            elements: {
+                line: {
+                    borderWidth: 3
+                }
             }
         }
-        },
     };
     
-    const radar = new Chart(
-        document.getElementById('radar'),
+    var radar = new Chart(
+        document.getElementById('myRadar'),
         config
     );
 });
@@ -204,48 +205,54 @@ function updatePlotly() {
             x: response.pp_years,
             y: response.estimated_clean,
             text: response.estimated_clean,
+            marker: {color: '#006400'},
             type: 'bar',
             name: 'Estimated Clean Energy Generated'
         };
     
         var trace_gen_clean = {
-            x: response.years,
+            x: response.pp_years,
             y: response.generated_clean,
             text: response.generated_clean,
+            marker: {color: '#8FBC8F'},
             type: 'bar',
             name: 'Reported Clean Energy Generated'
         };
     
         var trace_est_dirty = {
-            x: response.years,
+            x: response.pp_years,
             y: response.estimated_dirty,
             text: response.estimated_dirty,
+            marker: {color: '#696969'},
             type: 'bar',
             name: 'Estimated Dirty Energy Generated'
         };
     
         var trace_gen_dirty = {
-            x: response.years,
+            x: response.pp_years,
             y: response.generated_dirty,
             text: response.generated_dirty,
+            marker: {color: '#DCDCDC'},
             type: 'bar',
             name: 'Reported Dirty Energy Generated'
         };
     
         var barData = [trace_gen_clean, trace_gen_dirty, trace_est_clean, trace_est_dirty];
     
-        var region = 'Global'
+        console.log(barData);
+        var region = 'Global';
     
         var layout = {
             barmode: 'group',
             // Add country name here
             title: `Energy produced by power plants in the ${region}`,
             yaxis: {
-            title: "Gigawatt hours (GWh)"
-            },
+                title: "Gigawatt hours (GWh)"
+                },
             xaxis: {
-            title: "Year"
-            },
+                title: "Year",
+                range: [2012,2018]
+            }
         };
     
         Plotly.newPlot('bar', barData, layout);
@@ -290,8 +297,8 @@ function updatePlotly() {
         
         var layout = {
             title: 'Historic GHG emission from electricity production',
-            height: 600,
-            width: 1200,
+            // height: 600,
+            // width: 1200,
             yaxis: {
             title: "kilotonne CO2 equivalent"
             },
@@ -302,7 +309,7 @@ function updatePlotly() {
         
         var data = [trace1, trace2, trace3, trace4];
         
-        Plotly.newPlot('gauge', data, layout);
+        Plotly.newPlot('line', data, layout);
     
         var data = [{
             type: "pie",
@@ -312,49 +319,50 @@ function updatePlotly() {
             textinfo: "label+percent",
             textposition: "outside",
             automargin: true
-          }]
-          
-          var layout = {
-            height: 400,
-            width: 400,
+        }]
+        
+        var layout = {
+            // height: 400,
+            // width: 400,
             margin: {"t": 0, "b": 0, "l": 0, "r": 0},
             showlegend: false
             }
-          
-          Plotly.newPlot('bar', data, layout)
+        
+        Plotly.newPlot('pie', data, layout)
     
+        document.querySelector("#radarPlot").innerHTML = '<canvas id="myRadar"></canvas>';
     
-          const radarData = {
+        const radarData = {
             labels: response.plant_labels,
             datasets: [{
-              label: 'Number of Total Power Plants',
-              data: response.plant_counts_split,
-              fill: true,
-              backgroundColor: 'rgba(255, 99, 132, 0.2)',
-              borderColor: 'rgb(255, 99, 132)',
-              pointBackgroundColor: 'rgb(255, 99, 132)',
-              pointBorderColor: '#fff',
-              pointHoverBackgroundColor: '#fff',
-              pointHoverBorderColor: 'rgb(255, 99, 132)'
+                label: 'Number of Total Power Plants',
+                data: response.plant_counts_split,
+                fill: true,
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgb(255, 99, 132)',
+                pointBackgroundColor: 'rgb(255, 99, 132)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgb(255, 99, 132)'
             }]
-          };
-          
-          const config = {
+        };
+        
+        const config = {
             type: 'radar',
             data: radarData,
             options: {
-              elements: {
-                line: {
-                  borderWidth: 3
+                elements: {
+                    line: {
+                        borderWidth: 3
+                    }
                 }
-              }
-            },
-          };
-          
-          const radar = new Chart(
-            document.getElementById('radar'),
+            }
+        };
+        
+        var radar = new Chart(
+            document.getElementById('myRadar'),
             config
-          );
+        );
 
         // update all plots with the current selection.
         // updateBar();
@@ -363,3 +371,5 @@ function updatePlotly() {
         // updateRadar();
     });
 };
+
+
