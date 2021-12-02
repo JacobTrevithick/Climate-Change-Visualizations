@@ -28,7 +28,7 @@ d3.json(flaskGlobalViewURL).then(function (response) {
     };
 
     var trace_gen_clean = {
-        x: response.years,
+        x: response.pp_years,
         y: response.generated_clean,
         text: response.generated_clean,
         type: 'bar',
@@ -36,7 +36,7 @@ d3.json(flaskGlobalViewURL).then(function (response) {
     };
 
     var trace_est_dirty = {
-        x: response.years,
+        x: response.pp_years,
         y: response.estimated_dirty,
         text: response.estimated_dirty,
         type: 'bar',
@@ -44,7 +44,7 @@ d3.json(flaskGlobalViewURL).then(function (response) {
     };
 
     var trace_gen_dirty = {
-        x: response.years,
+        x: response.pp_years,
         y: response.generated_dirty,
         text: response.generated_dirty,
         type: 'bar',
@@ -53,7 +53,8 @@ d3.json(flaskGlobalViewURL).then(function (response) {
 
     var barData = [trace_gen_clean, trace_gen_dirty, trace_est_clean, trace_est_dirty];
 
-    var region = 'Global'
+    console.log(barData);
+    var region = 'Global';
 
     var layout = {
         barmode: 'group',
@@ -140,21 +141,21 @@ d3.json(flaskGlobalViewURL).then(function (response) {
         showlegend: false
         }
     
-    Plotly.newPlot('bar', data, layout)
+    Plotly.newPlot('pie', data, layout)
 
 
     const radarData = {
         labels: response.plant_labels,
         datasets: [{
-        label: 'Number of Total Power Plants',
-        data: response.plant_counts_split,
-        fill: true,
-        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-        borderColor: 'rgb(255, 99, 132)',
-        pointBackgroundColor: 'rgb(255, 99, 132)',
-        pointBorderColor: '#fff',
-        pointHoverBackgroundColor: '#fff',
-        pointHoverBorderColor: 'rgb(255, 99, 132)'
+            label: 'Number of Total Power Plants',
+            data: response.plant_counts_split,
+            fill: true,
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            borderColor: 'rgb(255, 99, 132)',
+            pointBackgroundColor: 'rgb(255, 99, 132)',
+            pointBorderColor: '#fff',
+            pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: 'rgb(255, 99, 132)'
         }]
     };
     
@@ -162,16 +163,24 @@ d3.json(flaskGlobalViewURL).then(function (response) {
         type: 'radar',
         data: radarData,
         options: {
-        elements: {
-            line: {
-            borderWidth: 3
+            elements: {
+                line: {
+                    borderWidth: 3
+                }
+            },
+            scales: {
+                r: {
+                    ticks: {
+                        color: 'red',
+                        type: 'logarithmic'
+                    }
+                }
             }
         }
-        },
     };
     
-    const radar = new Chart(
-        document.getElementById('radar'),
+    var radar = new Chart(
+        document.getElementById('myRadar'),
         config
     );
 });
@@ -204,7 +213,7 @@ function updatePlotly() {
         };
     
         var trace_gen_clean = {
-            x: response.years,
+            x: response.pp_years,
             y: response.generated_clean,
             text: response.generated_clean,
             type: 'bar',
@@ -212,7 +221,7 @@ function updatePlotly() {
         };
     
         var trace_est_dirty = {
-            x: response.years,
+            x: response.pp_years,
             y: response.estimated_dirty,
             text: response.estimated_dirty,
             type: 'bar',
@@ -220,7 +229,7 @@ function updatePlotly() {
         };
     
         var trace_gen_dirty = {
-            x: response.years,
+            x: response.pp_years,
             y: response.generated_dirty,
             text: response.generated_dirty,
             type: 'bar',
@@ -307,49 +316,58 @@ function updatePlotly() {
             textinfo: "label+percent",
             textposition: "outside",
             automargin: true
-          }]
+          }];
           
-          var layout = {
-            height: 400,
-            width: 400,
-            margin: {"t": 0, "b": 0, "l": 0, "r": 0},
-            showlegend: false
-            }
-          
-          Plotly.newPlot('bar', data, layout)
+        var layout = {
+        height: 400,
+        width: 400,
+        margin: {"t": 0, "b": 0, "l": 0, "r": 0},
+        showlegend: false
+        };
+        
+        Plotly.newPlot('pie', data, layout);
+
+
+        // var radar = document.getElementById('#radar').data('radar');
+        // console.log(radar);
+
+        // radar.data.labels.push(response.plant_labels);
+        // radar.data.datasets[0].data.push(response.plant_counts_split);
+        // radar.update();
     
-    
-          const radarData = {
+        document.querySelector("#radarPlot").innerHTML = '<canvas id="myRadar"></canvas>';
+            
+        const radarData = {
             labels: response.plant_labels,
             datasets: [{
-              label: 'Number of Total Power Plants',
-              data: response.plant_counts_split,
-              fill: true,
-              backgroundColor: 'rgba(255, 99, 132, 0.2)',
-              borderColor: 'rgb(255, 99, 132)',
-              pointBackgroundColor: 'rgb(255, 99, 132)',
-              pointBorderColor: '#fff',
-              pointHoverBackgroundColor: '#fff',
-              pointHoverBorderColor: 'rgb(255, 99, 132)'
+                label: 'Number of Total Power Plants',
+                data: response.plant_counts_split,
+                fill: true,
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgb(255, 99, 132)',
+                pointBackgroundColor: 'rgb(255, 99, 132)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgb(255, 99, 132)'
             }]
-          };
-          
-          const config = {
+        };
+        
+        const config = {
             type: 'radar',
             data: radarData,
             options: {
-              elements: {
-                line: {
-                  borderWidth: 3
+                elements: {
+                    line: {
+                        borderWidth: 3
+                    }
                 }
-              }
-            },
-          };
-          
-          const radar = new Chart(
-            document.getElementById('radar'),
+            }
+        };
+
+        var radar = new Chart(
+            document.getElementById('myRadar'),
             config
-          );
+        );
 
         // update all plots with the current selection.
         // updateBar();
