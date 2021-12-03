@@ -1,5 +1,6 @@
 var localHostURL = "http://127.0.0.1:5000/";
 var flaskGlobalViewURL = localHostURL + "global_view";
+var countryOutlineURL = 'https://datahub.io/core/geo-countries/r/0.html'
 
 
 d3.json(flaskGlobalViewURL).then(function (response) {
@@ -18,6 +19,20 @@ d3.json(flaskGlobalViewURL).then(function (response) {
         opt.value = options[i];
         sel.appendChild(opt);
     };
+
+
+    // Map will be drawn here using response data
+    var powerPlantLayer = createPowerPlantsLayer(response);
+
+    // d3.json(countryOutlineURL).then(function(response) {
+
+    //     var countryLayer = createCountryLayer(response);
+
+    //     createMap(powerPlantLayer, countryLayer);
+
+    // })
+
+    createMap(powerPlantLayer);
 
     var trace_est_clean = {
         x: response.pp_years,
@@ -372,4 +387,117 @@ function updatePlotly() {
     });
 };
 
+function createMap(markerLayer) {
 
+    var mapCenter = [39.9283, -98.5795];
+    var mapZoom = 10;
+
+    // Create the tile layer that will be the background of our map.
+    var streetMapLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }); 
+    
+    var myMap = L.map('map', {
+        center: mapCenter,
+        zoom: mapZoom,
+        layers: [streetMapLayer, markerLayer]
+    });
+
+    var baseMap = {
+        "Street Map": streetMapLayer
+    };
+
+    var powerPlantsOverlayMap = {
+        "Power Plants": markerLayer
+    };
+
+    L.control.layers(baseMap, powerPlantsOverlayMap, {
+        collapsed: false
+    }).addTo(myMap);
+
+    // var legend = L.control({position: 'bottomright'});
+
+    // legend.onAdd = function (map) {
+
+    //     var div = L.DomUtil.create('div', 'info legend'),
+    //         grades = ['Clean Energy', 'Dirty Energy'],
+    //         labels = [];
+
+    //     // loop through our density intervals and generate a label with a colored square for each interval
+    //     for (var i = 0; i < grades.length; i++) {
+    //         div.innerHTML +=
+    //             '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
+    //             grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+    //     }
+
+    //     return div;
+    // };
+
+    // legend.addTo(myMap);
+};
+
+// UNFINISHED NEED TO adjust colors
+function createPowerPlantsLayer(response) {
+
+    var ppMarkers = [];
+
+    console.log(response.map_pp_types);
+
+    for (var i = 0; i < response.map_pp_types.length; i++) {
+
+
+        var primaryFuel = response.map_pp_types[i];
+        var latLon = [response.map_pp_lat[i], response.map_pp_lon[i]];
+        var countryName = response.map_pp_country[i];
+
+        //Default dirty color
+        var color = '#696969';
+
+        let cleanEnergyTypes = ['Hydro', 'Solar', 'Gas', 'Wind', 'Waste','Biomass', 'Wave and Tidal', 'Geothermal', 'Storage', 'Cogeneration', 'Nuclear'];
+
+        for (var j = 0; j < cleanEnergyTypes.length; j++) {
+            console.log(primaryFuel);
+            console.log(cleanEnergyTypes[j]);
+            if (primaryFuel == cleanEnergyTypes[j]){
+                
+                color = '#8FBC8F';
+            }
+        }
+        console.log(primaryFuel);
+        console.log(color);
+
+        var ppMarker = L.circle(latLon, {
+            color: color,
+            fillColor: color,
+            fillOpacity: 0.75,
+            radius: 3000
+        }).bindPopup(`<h3>Primary Fuel Type: ${primaryFuel}</h3><hr><h3>Country: ${countryName}</h3><br><h3>Lat, Lon: ${latLon[0]}, ${latLon[1]}</h3>`);
+
+        ppMarkers.push(ppMarker);
+    };
+
+    var ppMarkerLayerGroup = L.layerGroup(ppMarkers);
+
+    return ppMarkerLayerGroup;
+
+};
+
+
+// takes in geoJSON file containing the outlines of all countries
+function createCountryLayer(response){
+    
+    var countries = response.features;
+
+    var countryOutlines = L.geoJSON(countries);
+
+    return countryOutlines;
+};
+
+// function getColor(d) {
+//     return d > 90 ? '#78281F' :
+//            d > 70  ? '#E74C3C' :
+//            d > 50  ? '#F39C12' :
+//            d > 30  ? '#F9E79F' :
+//            d > 10   ? '#82E0AA' :
+//                       '#1D8348';
+// };

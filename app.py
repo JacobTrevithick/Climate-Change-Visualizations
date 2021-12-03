@@ -39,6 +39,10 @@ def global_view():
     pp_years = ['2013', '2014', '2015', '2016','2017', '2018', '2019']
 
     global_dict = {
+        'map_pp_types': [],
+        'map_pp_lat': [],
+        'map_pp_lon': [],
+        'map_pp_country': [],
         'country_names': [],
         'pp_years': pp_years, # done
         'generated_clean': [], # done
@@ -55,6 +59,17 @@ def global_view():
         'ch4_totals': [],
         'n2o_totals': []
     }
+
+    # querying power plant information for plotting purposes
+    map_pp_results = session.query(ppi.primary_fuel, ppi.latitude, ppi.longitude, co.country_long).join(co, ppi.country_id == co.country_id)
+
+    map_pp_df = pd.DataFrame(map_pp_results, columns=['primary_fuel', 'lat', 'lon', 'country_name'])
+
+    global_dict['map_pp_types'] = map_pp_df['primary_fuel'].tolist()
+    global_dict['map_pp_lat'] = map_pp_df['lat'].apply(lambda x: float(x)).tolist()
+    global_dict['map_pp_lon'] = map_pp_df['lon'].apply(lambda x: float(x)).tolist()
+    global_dict['map_pp_country'] = map_pp_df['country_name'].tolist()
+
 
     # query all country names
     
