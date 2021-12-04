@@ -1,4 +1,5 @@
 from flask import Flask, render_template, redirect, jsonify
+from flask_cors import CORS
 import pandas as pd
 import config
 from sqlalchemy.ext.automap import automap_base
@@ -7,6 +8,8 @@ from sqlalchemy import create_engine, func, distinct
 
 # Create an instance of Flask
 app = Flask(__name__)
+
+CORS(app, supports_credentials=True)
 
 # create sqlalchemy engine to connect to postgresql db
 database_name = 'Climate_DB'
@@ -43,6 +46,8 @@ def global_view():
         'map_pp_lat': [],
         'map_pp_lon': [],
         'map_pp_country': [],
+        'map_geo_country': [],
+        'map_geo_ghgs_values': [],
         'country_names': [],
         'pp_years': pp_years, # done
         'generated_clean': [], # done
@@ -69,6 +74,16 @@ def global_view():
     global_dict['map_pp_lat'] = map_pp_df['lat'].apply(lambda x: float(x)).tolist()
     global_dict['map_pp_lon'] = map_pp_df['lon'].apply(lambda x: float(x)).tolist()
     global_dict['map_pp_country'] = map_pp_df['country_name'].tolist()
+
+
+    # query country name list and ghgs value for each country to populate geojson coloring
+    map_geo_results = session.query(ghg.value, co.country_long).join(co, ghg.country_id == co.country_id).filter(ghg.category_short == 'ghgs').filter(ghg.year == '2014').order_by(ghg.value).all()
+    
+    map_geo_df = pd.DataFrame(map_geo_results, columns=['ghg_value', 'country_name'])
+    
+    global_dict['map_geo_country'] = map_geo_df['country_name'].tolist()
+    global_dict['map_geo_ghgs_values'] = map_geo_df['ghg_value'].apply(lambda x: float(x)).tolist()
+
 
 
     # query all country names
@@ -316,7 +331,6 @@ def update(country_name):
 
     # return global totals
     return jsonify(country_dict)
-
 
 
 

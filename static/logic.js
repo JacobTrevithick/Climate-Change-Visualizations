@@ -1,6 +1,8 @@
 var localHostURL = "http://127.0.0.1:5000/";
 var flaskGlobalViewURL = localHostURL + "global_view";
-var countryOutlineURL = 'https://datahub.io/core/geo-countries/r/0.html'
+
+
+var countryOutlineURL = '/static/countries.geojson'
 
 
 d3.json(flaskGlobalViewURL).then(function (response) {
@@ -22,17 +24,20 @@ d3.json(flaskGlobalViewURL).then(function (response) {
 
 
     // Map will be drawn here using response data
+    // var powerPlantLayer = createPowerPlantsLayer(response);
+    // createMap(powerPlantLayer);
     var powerPlantLayer = createPowerPlantsLayer(response);
 
-    // d3.json(countryOutlineURL).then(function(response) {
+    d3.json(countryOutlineURL).then(function(geoResponse) {
 
-    //     var countryLayer = createCountryLayer(response);
+        // takes in 'options' variable as country names to compare for ghg color fills
+        var countryLayer = createCountryLayer(geoResponse, response);
 
-    //     createMap(powerPlantLayer, countryLayer);
+        createMap(powerPlantLayer, countryLayer);
 
-    // })
+    })
 
-    createMap(powerPlantLayer);
+ 
 
     var trace_est_clean = {
         x: response.pp_years,
@@ -387,10 +392,10 @@ function updatePlotly() {
     });
 };
 
-function createMap(markerLayer) {
+function createMap(markerLayer, countryOutlineLayer) {
 
     var mapCenter = [39.9283, -98.5795];
-    var mapZoom = 10;
+    var mapZoom = 2;
 
     // Create the tile layer that will be the background of our map.
     var streetMapLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -400,7 +405,7 @@ function createMap(markerLayer) {
     var myMap = L.map('map', {
         center: mapCenter,
         zoom: mapZoom,
-        layers: [streetMapLayer, markerLayer]
+        layers: [streetMapLayer, markerLayer, countryOutlineLayer]
     });
 
     var baseMap = {
@@ -408,40 +413,39 @@ function createMap(markerLayer) {
     };
 
     var powerPlantsOverlayMap = {
-        "Power Plants": markerLayer
+        "Power Plants": markerLayer,
+        "Greenhouse Gases per Country": countryOutlineLayer
     };
 
     L.control.layers(baseMap, powerPlantsOverlayMap, {
         collapsed: false
     }).addTo(myMap);
 
-    // var legend = L.control({position: 'bottomright'});
+    var legend = L.control({position: 'bottomright'});
 
-    // legend.onAdd = function (map) {
+    legend.onAdd = function (map) {
 
-    //     var div = L.DomUtil.create('div', 'info legend'),
-    //         grades = ['Clean Energy', 'Dirty Energy'],
-    //         labels = [];
+        var div = L.DomUtil.create('div', 'info legend'),
+            grades = [0, 10000, 100000, 1000000],
+            labels = [];
 
-    //     // loop through our density intervals and generate a label with a colored square for each interval
-    //     for (var i = 0; i < grades.length; i++) {
-    //         div.innerHTML +=
-    //             '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
-    //             grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
-    //     }
+        // loop through our density intervals and generate a label with a colored square for each interval
+        for (var i = 0; i < grades.length; i++) {
+            console.log(getColor(grades[i] + 1))
+            div.innerHTML +=
+                '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
+                grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+        }
 
-    //     return div;
-    // };
+        return div;
+    };
 
-    // legend.addTo(myMap);
+    legend.addTo(myMap);
 };
 
-// UNFINISHED NEED TO adjust colors
 function createPowerPlantsLayer(response) {
 
     var ppMarkers = [];
-
-    console.log(response.map_pp_types);
 
     for (var i = 0; i < response.map_pp_types.length; i++) {
 
@@ -456,15 +460,12 @@ function createPowerPlantsLayer(response) {
         let cleanEnergyTypes = ['Hydro', 'Solar', 'Gas', 'Wind', 'Waste','Biomass', 'Wave and Tidal', 'Geothermal', 'Storage', 'Cogeneration', 'Nuclear'];
 
         for (var j = 0; j < cleanEnergyTypes.length; j++) {
-            console.log(primaryFuel);
-            console.log(cleanEnergyTypes[j]);
+
             if (primaryFuel == cleanEnergyTypes[j]){
                 
                 color = '#8FBC8F';
             }
         }
-        console.log(primaryFuel);
-        console.log(color);
 
         var ppMarker = L.circle(latLon, {
             color: color,
@@ -484,20 +485,68 @@ function createPowerPlantsLayer(response) {
 
 
 // takes in geoJSON file containing the outlines of all countries
-function createCountryLayer(response){
+function createCountryLayer(geoResponse, queryResponse){
     
-    var countries = response.features;
+    var countries = geoResponse.features;
+    var countryNameArrayDB = queryResponse.map_geo_country;
 
-    var countryOutlines = L.geoJSON(countries);
+    var countryColorObject = {}
+
+    // // default color
+    // var countryColor = '#FFFFFF'
+
+    for (var i = 0; i < countries.length; i++){
+        
+        var geoCountryName = countries[i].properties['ADMIN'].toLowerCase();
+
+        countryColorObject[countries[i].properties['ADMIN']] = '#FFFFFF';
+
+        for (var j = 0; j < countryNameArrayDB.length; j++){
+
+            if (geoCountryName == countryNameArrayDB[j]){
+
+                countryColor = getGeoColor(queryResponse.map_geo_ghgs_values[j]);
+
+                countryColorObject[countries[i].properties['ADMIN']] = countryColor;
+            }
+        }
+    }
+
+    var countryOutlines = L.geoJSON(countries, {
+        style: function(feature){
+            return {color: countryColorObject[feature.properties['ADMIN']]}
+        },
+        onEachFeature: onEachFeature
+    });
 
     return countryOutlines;
 };
 
-// function getColor(d) {
-//     return d > 90 ? '#78281F' :
-//            d > 70  ? '#E74C3C' :
-//            d > 50  ? '#F39C12' :
-//            d > 30  ? '#F9E79F' :
-//            d > 10   ? '#82E0AA' :
-//                       '#1D8348';
-// };
+function getGeoColor(value) {
+
+    if (value < 9999){
+        return "#31F615"
+    } else if (value < 99999){
+        return "#F6F615"
+    } else if (value < 999999){
+        return "#F6A815"
+    } else {
+        return '#FF1B00'
+    };
+
+};
+
+
+function onEachFeature(feature, layer) {
+
+    layer.bindPopup(`<h3>Country: ${feature.properties['ADMIN']}</h3>`);
+}
+
+
+
+function getColor(d) {
+    return d > 999999 ? '#FF1B00' :
+           d > 99999  ? '#F6A815' :
+           d > 9999  ? '#F6F615' :
+                      '#31F615';
+};
