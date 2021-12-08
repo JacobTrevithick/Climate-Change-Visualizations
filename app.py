@@ -26,6 +26,7 @@ ghg = Base.classes.greenhouse_gases
 ppn = Base.classes.power_plant_names
 ppgs = Base.classes.power_plant_gen_stats
 ppi = Base.classes.power_plants_info
+ft = Base.classes.fuel_types
 
 # Route to render index.html template
 @app.route("/")
@@ -39,23 +40,28 @@ def global_view():
 
     session = Session(engine)
 
-    pp_years = ['2013', '2014', '2015', '2016','2017', '2018', '2019']
-
+    # pp_years = ['2013', '2014', '2015', '2016','2017', '2018', '2019']
+    
+    
+    pp_years = session.query(distinct(ppgs.year)).group_by(ppgs.year).all()
+    pp_years_list = pd.DataFrame(pp_years, columns=['pp_years'])['pp_years'].to_list()    
+    
+    
     global_dict = {
-        'map_pp_types': [],
-        'map_pp_lat': [],
-        'map_pp_lon': [],
-        'map_pp_country': [],
-        'map_geo_country': [],
-        'map_geo_ghgs_values': [],
-        'country_names': [],
-        'pp_years': pp_years, # done
+        'map_pp_types': [],# done
+        'map_pp_lat': [],# done
+        'map_pp_lon': [],# done
+        'map_pp_country': [],# done
+        'map_geo_country': [],# done
+        'map_geo_ghgs_values': [],# done
+        'country_names': [],# done
+        'pp_years': pp_years_list, # done
         'generated_clean': [], # done
-        'estimated_clean': [], # done
+        'estimated_clean': [],# done
         'generated_dirty': [], # done
         'estimated_dirty': [], # done
-        'clean_plant_count': [],
-        'dirty_plant_count': [],
+        'clean_plant_count': [],# done
+        'dirty_plant_count': [],# done
         'plant_labels': [],
         'plant_counts_split': [],
         'greenhouse_years': [],
@@ -66,7 +72,7 @@ def global_view():
     }
 
     # querying power plant information for plotting purposes
-    map_pp_results = session.query(ppi.primary_fuel, ppi.latitude, ppi.longitude, co.country_long).join(co, ppi.country_id == co.country_id)
+    map_pp_results = session.query(ft.primary_fuel, ppi.latitude, ppi.longitude, co.country_long).join(co, ppi.country_id == co.country_id).join(ft, ppi.fuel_id == ft.fuel_id)
 
     map_pp_df = pd.DataFrame(map_pp_results, columns=['primary_fuel', 'lat', 'lon', 'country_name'])
 
@@ -87,25 +93,18 @@ def global_view():
 
 
     # query all country names
-    
     country_name_results = session.query(co.country_long).order_by(co.country_long).all()
     country_name_list = pd.DataFrame(country_name_results, columns = ['names'])['names'].tolist()
     global_dict['country_names'] = country_name_list
-
-
-    gen_base = 'generation_gwh_'
-    est_base = 'estimated_generation_gwh_'
 
     # total power production data for plants
     for year in pp_years:
         
         # finding the sum of estimated totals 
         try:
-            est_string = est_base + year
-            est_column = getattr(ppgs, est_string)
 
             # clean estimated results
-            results_clean = session.query(func.sum(est_column)).join(ppi, ppgs.plant_id == ppi.plant_id).filter(ppi.clean_energy == True).all()
+            results_clean = session.query(func.sum(ppgs.estimated_gwh)).join(ppi, ppgs.plant_id == ppi.plant_id).join(ft, ppi.fuel_id == ft.fuel_id).filter(ft.clean_energy == True).filter(ppgs.year == year).all()
             
             value_clean = results_clean[0][0]
             
@@ -115,7 +114,7 @@ def global_view():
                 global_dict['estimated_clean'].append(float(value_clean))
             
             # non-clean estimated results
-            results_dirty = session.query(func.sum(est_column)).join(ppi, ppgs.plant_id == ppi.plant_id).filter(ppi.clean_energy == False).all()
+            results_dirty = session.query(func.sum(ppgs.estimated_gwh)).join(ppi, ppgs.plant_id == ppi.plant_id).join(ft, ppi.fuel_id == ft.fuel_id).filter(ft.clean_energy == False).filter(ppgs.year == year).all()
             
             value_dirty = results_dirty[0][0]
             
@@ -129,31 +128,28 @@ def global_view():
             global_dict['estimated_dirty'].append(None)
             global_dict['estimated_clean'].append(None)
         
-        # finding the sum of generated totals 
-        gen_string = gen_base + year
-        gen_column = getattr(ppgs, gen_string)
-        
+        # finding the sum of generated totals         
         # clean results
-        gen_results_clean = session.query(func.sum(gen_column)).join(ppi, ppgs.plant_id == ppi.plant_id).filter(ppi.clean_energy == True).all()
+        gen_results_clean = session.query(func.sum(ppgs.generated_gwh)).join(ppi, ppgs.plant_id == ppi.plant_id).join(ft, ppi.fuel_id == ft.fuel_id).filter(ft.clean_energy == True).filter(ppgs.year == year).all()
         
         gen_value_clean = float(gen_results_clean[0][0])
         global_dict['generated_clean'].append(gen_value_clean)
         
         # non-clean results
-        gen_results_dirty = session.query(func.sum(gen_column)).join(ppi, ppgs.plant_id == ppi.plant_id).filter(ppi.clean_energy == False).all()
+        gen_results_dirty = session.query(func.sum(ppgs.generated_gwh)).join(ppi, ppgs.plant_id == ppi.plant_id).join(ft, ppi.fuel_id == ft.fuel_id).filter(ft.clean_energy == False).filter(ppgs.year == year).all()
         
         gen_value_dirty = float(gen_results_dirty[0][0])
         global_dict['generated_dirty'].append(gen_value_dirty)
             
     # Power plant counts section here:
-    count_results_clean = session.query(func.count(ppi.plant_id)).filter(ppi.clean_energy == True).all()[0][0]
-    count_results_dirty = session.query(func.count(ppi.plant_id)).filter(ppi.clean_energy == False).all()[0][0]
+    count_results_clean = session.query(func.count(ppi.plant_id)).join(ft, ppi.fuel_id == ft.fuel_id).filter(ft.clean_energy == True).all()[0][0]
+    count_results_dirty = session.query(func.count(ppi.plant_id)).join(ft, ppi.fuel_id == ft.fuel_id).filter(ft.clean_energy == False).all()[0][0]
 
     global_dict['clean_plant_count'] = count_results_clean
     global_dict['dirty_plant_count'] = count_results_dirty
 
     # power plant counts distributed by count
-    pp_distribution_results = session.query(ppi.primary_fuel, func.count(ppi.primary_fuel)).group_by(ppi.primary_fuel).all()
+    pp_distribution_results = session.query(ft.primary_fuel, func.count(ft.primary_fuel)).join(ppi, ft.fuel_id == ppi.fuel_id).group_by(ft.primary_fuel).all()
 
     pp_dist_df = pd.DataFrame(pp_distribution_results, columns = ['primary_fuel', 'count'])
 
@@ -168,25 +164,10 @@ def global_view():
     global_dict['greenhouse_years'] = ghgs_years_list
 
     # need to create function for this
-    ghgs_totals_results = session.query(func.sum(ghg.value)).filter(ghg.category_short == 'ghgs').group_by(ghg.year).order_by(ghg.year).all()
-    ghgs_totals_list = pd.DataFrame(ghgs_totals_results, columns = ['totals'])['totals'].tolist()
-    ghgs_totals_floats = [float(x) for x in ghgs_totals_list]
-    global_dict['ghgs_totals'] = ghgs_totals_floats
-
-    co2_totals_results = session.query(func.sum(ghg.value)).filter(ghg.category_short == 'co2').group_by(ghg.year).order_by(ghg.year).all()
-    co2_totals_list = pd.DataFrame(co2_totals_results, columns = ['totals'])['totals'].tolist()
-    co2_totals_floats = [float(x) for x in co2_totals_list]
-    global_dict['co2_totals'] = co2_totals_floats
-
-    ch4_totals_results = session.query(func.sum(ghg.value)).filter(ghg.category_short == 'ch4').group_by(ghg.year).order_by(ghg.year).all()
-    ch4_totals_list = pd.DataFrame(ch4_totals_results, columns = ['totals'])['totals'].tolist()
-    ch4_totals_floats = [float(x) for x in ch4_totals_list]
-    global_dict['ch4_totals'] = ch4_totals_floats
-
-    n2o_totals_results = session.query(func.sum(ghg.value)).filter(ghg.category_short == 'n2o').group_by(ghg.year).order_by(ghg.year).all()
-    n2o_totals_list = pd.DataFrame(n2o_totals_results, columns = ['totals'])['totals'].tolist()
-    n2o_totals_floats = [float(x) for x in n2o_totals_list]
-    global_dict['n2o_totals'] = n2o_totals_floats
+    global_dict['ghgs_totals'] = get_gh_yearly_totals(ghg, session, 'ghgs')
+    global_dict['co2_totals'] = get_gh_yearly_totals(ghg, session, 'co2')
+    global_dict['ch4_totals'] = get_gh_yearly_totals(ghg, session, 'ch4')
+    global_dict['n2o_totals'] = get_gh_yearly_totals(ghg, session, 'n2o')
     
     session.close()
 
@@ -194,17 +175,17 @@ def global_view():
     return jsonify(global_dict)
 
 
-
-# Route that will trigger the scrape function
+# # Route that will trigger the scrape function
 @app.route("/<country_name>")
 def update(country_name):
 
     session = Session(engine)
 
-    pp_years = ['2013', '2014', '2015', '2016','2017', '2018', '2019']
+    pp_years = session.query(distinct(ppgs.year)).group_by(ppgs.year).all()
+    pp_years_list = pd.DataFrame(pp_years, columns=['pp_years'])['pp_years'].to_list()  
 
     country_dict = {
-        'pp_years': pp_years, # done
+        'pp_years': pp_years_list, # done
         'generated_clean': [], # done
         'estimated_clean': [], # done
         'generated_dirty': [], # done
@@ -220,19 +201,14 @@ def update(country_name):
         'n2o_totals': []
     }
 
-    gen_base = 'generation_gwh_'
-    est_base = 'estimated_generation_gwh_'
-
     # total power production data for plants
     for year in pp_years:
         
         # finding the sum of estimated totals 
         try:
-            est_string = est_base + year
-            est_column = getattr(ppgs, est_string)
 
             # clean estimated results
-            results_clean = session.query(func.sum(est_column)).join(ppi, ppgs.plant_id == ppi.plant_id).join(co, ppi.country_id == co.country_id).filter(ppi.clean_energy == True).filter(co.country_long == country_name).all()
+            results_clean = session.query(func.sum(ppgs.estimated_gwh)).join(ppi, ppgs.plant_id == ppi.plant_id).join(ft, ppi.fuel_id == ft.fuel_id).join(co, ppi.country_id == co.country_id).filter(co.country_long == country_name).filter(ft.clean_energy == True).filter(ppgs.year == year).all()
             
             value_clean = results_clean[0][0]
             
@@ -242,7 +218,7 @@ def update(country_name):
                 country_dict['estimated_clean'].append(float(value_clean))
             
             # non-clean estimated results
-            results_dirty = session.query(func.sum(est_column)).join(ppi, ppgs.plant_id == ppi.plant_id).join(co, ppi.country_id == co.country_id).filter(ppi.clean_energy == False).filter(co.country_long == country_name).all()
+            results_dirty = session.query(func.sum(ppgs.estimated_gwh)).join(ppi, ppgs.plant_id == ppi.plant_id).join(ft, ppi.fuel_id == ft.fuel_id).join(co, ppi.country_id == co.country_id).filter(co.country_long == country_name).filter(ft.clean_energy == False).filter(ppgs.year == year).all()
             
             value_dirty = results_dirty[0][0]
             
@@ -256,12 +232,9 @@ def update(country_name):
             country_dict['estimated_dirty'].append(None)
             country_dict['estimated_clean'].append(None)
         
-        # finding the sum of generated totals 
-        gen_string = gen_base + year
-        gen_column = getattr(ppgs, gen_string)
-        
+        # finding the sum of generated totals       
         # clean results
-        gen_results_clean = session.query(func.sum(gen_column)).join(ppi, ppgs.plant_id == ppi.plant_id).join(co, ppi.country_id == co.country_id).filter(ppi.clean_energy == True).filter(co.country_long == country_name).all()
+        gen_results_clean = session.query(func.sum(ppgs.generated_gwh)).join(ppi, ppgs.plant_id == ppi.plant_id).join(ft, ppi.fuel_id == ft.fuel_id).join(co, ppi.country_id == co.country_id).filter(co.country_long == country_name).filter(ft.clean_energy == True).filter(ppgs.year == year).all()
         
         gen_value_clean = gen_results_clean[0][0]
         
@@ -271,7 +244,8 @@ def update(country_name):
             country_dict['generated_clean'].append(float(gen_value_clean))
         
         # non-clean results
-        gen_results_dirty = session.query(func.sum(gen_column)).join(ppi, ppgs.plant_id == ppi.plant_id).join(co, ppi.country_id == co.country_id).filter(ppi.clean_energy == False).filter(co.country_long == country_name).all()
+        gen_results_dirty = session.query(func.sum(ppgs.generated_gwh)).join(ppi, ppgs.plant_id == ppi.plant_id).join(ft, ppi.fuel_id == ft.fuel_id).join(co, ppi.country_id == co.country_id).filter(co.country_long == country_name).filter(ft.clean_energy == False).filter(ppgs.year == year).all()
+        
         
         gen_value_dirty = gen_results_dirty[0][0]
         
@@ -280,19 +254,16 @@ def update(country_name):
         else: 
             country_dict['generated_dirty'].append(float(gen_value_dirty))
         
-        
-        # gen_value_dirty = float(gen_results_dirty[0][0])
-        # country_dict['generated_dirty'].append(gen_value_dirty)
             
     # Power plant counts section here:
-    count_results_clean = session.query(func.count(ppi.plant_id)).join(co, ppi.country_id == co.country_id).filter(ppi.clean_energy == True).filter(co.country_long == country_name).all()[0][0]
-    count_results_dirty = session.query(func.count(ppi.plant_id)).join(co, ppi.country_id == co.country_id).filter(ppi.clean_energy == False).filter(co.country_long == country_name).all()[0][0]
+    count_results_clean = session.query(func.count(ppi.plant_id)).join(ft, ppi.fuel_id == ft.fuel_id).join(co, ppi.country_id == co.country_id).filter(co.country_long == country_name).filter(ft.clean_energy == True).all()[0][0]
+    count_results_dirty = session.query(func.count(ppi.plant_id)).join(ft, ppi.fuel_id == ft.fuel_id).join(co, ppi.country_id == co.country_id).filter(co.country_long == country_name).filter(ft.clean_energy == False).all()[0][0]
 
     country_dict['clean_plant_count'] = count_results_clean
     country_dict['dirty_plant_count'] = count_results_dirty
 
     # power plant counts distributed by count
-    pp_distribution_results = session.query(ppi.primary_fuel, func.count(ppi.primary_fuel)).join(co, ppi.country_id == co.country_id).group_by(ppi.primary_fuel).filter(co.country_long == country_name).all()
+    pp_distribution_results = session.query(ft.primary_fuel, func.count(ft.primary_fuel)).join(ppi, ft.fuel_id == ppi.fuel_id).join(co, ppi.country_id == co.country_id).filter(co.country_long == country_name).group_by(ft.primary_fuel).all()
 
     pp_dist_df = pd.DataFrame(pp_distribution_results, columns = ['primary_fuel', 'count'])
 
@@ -306,31 +277,45 @@ def update(country_name):
 
     country_dict['greenhouse_years'] = ghgs_years_list
 
-    # need to create function for this
-    ghgs_totals_results = session.query(func.sum(ghg.value)).join(co, ghg.country_id == co.country_id).filter(ghg.category_short == 'ghgs').filter(co.country_long == country_name).group_by(ghg.year).order_by(ghg.year).all()
-    ghgs_totals_list = pd.DataFrame(ghgs_totals_results, columns = ['totals'])['totals'].tolist()
-    ghgs_totals_floats = [float(x) for x in ghgs_totals_list]
-    country_dict['ghgs_totals'] = ghgs_totals_floats
-
-    co2_totals_results = session.query(func.sum(ghg.value)).join(co, ghg.country_id == co.country_id).filter(ghg.category_short == 'co2').filter(co.country_long == country_name).group_by(ghg.year).order_by(ghg.year).all()
-    co2_totals_list = pd.DataFrame(co2_totals_results, columns = ['totals'])['totals'].tolist()
-    co2_totals_floats = [float(x) for x in co2_totals_list]
-    country_dict['co2_totals'] = co2_totals_floats
-
-    ch4_totals_results = session.query(func.sum(ghg.value)).join(co, ghg.country_id == co.country_id).filter(ghg.category_short == 'ch4').filter(co.country_long == country_name).group_by(ghg.year).order_by(ghg.year).all()
-    ch4_totals_list = pd.DataFrame(ch4_totals_results, columns = ['totals'])['totals'].tolist()
-    ch4_totals_floats = [float(x) for x in ch4_totals_list]
-    country_dict['ch4_totals'] = ch4_totals_floats
-
-    n2o_totals_results = session.query(func.sum(ghg.value)).join(co, ghg.country_id == co.country_id).filter(ghg.category_short == 'n2o').filter(co.country_long == country_name).group_by(ghg.year).order_by(ghg.year).all()
-    n2o_totals_list = pd.DataFrame(n2o_totals_results, columns = ['totals'])['totals'].tolist()
-    n2o_totals_floats = [float(x) for x in n2o_totals_list]
-    country_dict['n2o_totals'] = n2o_totals_floats
+    # Query yearly totals specific to the country chosen
+    country_dict['ghgs_totals'] = get_gh_yearly_totals(ghg, session, 'ghgs', country_name = country_name)
+    country_dict['co2_totals'] = get_gh_yearly_totals(ghg, session, 'co2', country_name = country_name)
+    country_dict['ch4_totals'] = get_gh_yearly_totals(ghg, session, 'ch4', country_name = country_name)
+    country_dict['n2o_totals'] = get_gh_yearly_totals(ghg, session, 'n2o', country_name = country_name)
     
     session.close()
 
-    # return global totals
+    # return country totals
     return jsonify(country_dict)
+
+
+def get_gh_yearly_totals(ghg_table, session, gas_type, country_name = False):
+    '''
+    function queries DB to find total greenhouse gas emissions on a yearly basis
+    
+    @PARAMS: 
+    ghg_table: greenhouse gases table object
+    session: sqlalchemy session -> session = Session(engine)
+    gas_type: type of greenhouse gas
+    country_name: specific country name
+    
+    @Returns:
+    total_floats: list of ghg totals on a yearly basis
+    '''
+    
+    if country_name:
+        
+        totals_results = session.query(func.sum(ghg_table.value)).join(co, ghg.country_id == co.country_id).filter(ghg_table.category_short == gas_type).filter(co.country_long == country_name).group_by(ghg_table.year).order_by(ghg_table.year).all()
+        totals_list = pd.DataFrame(totals_results, columns = ['totals'])['totals'].tolist()
+        totals_floats = [float(x) for x in totals_list]
+        
+    else:
+        
+        totals_results = session.query(func.sum(ghg_table.value)).filter(ghg_table.category_short == gas_type).group_by(ghg_table.year).order_by(ghg_table.year).all()
+        totals_list = pd.DataFrame(totals_results, columns = ['totals'])['totals'].tolist()
+        totals_floats = [float(x) for x in totals_list]
+    
+    return totals_floats
 
 
 

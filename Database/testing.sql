@@ -20,5 +20,5 @@ SELECT DISTINCT year
 FROM greenhouse_gases
 ORDER BY year ASC;
 
-SELECT SUM(ppgs.estimated_generation_gwh_)
+
 
