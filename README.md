@@ -17,7 +17,7 @@ Total amount of power (gwh) generated per year.
 
 
 **Vis 1:**
-![Earthquake Map 1](https://user-images.githubusercontent.com/74067302/143719607-27c9ff5a-e221-46f0-a037-212cf2838d9e.png)
+![Doomsday Counter](https://github.com/JacobTrevithick/Climate-Change-Visualizations/blob/c63ea5cc8a825d7a65be15d0731da24d290968f7/Images/Doomsday_counter.png)
 
 
 
