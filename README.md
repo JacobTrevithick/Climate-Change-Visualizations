@@ -11,25 +11,31 @@ We looked at data from various countries detailing greenhouse gas emissions as w
 Data includes:
 
 Types of emissions per country per year.
+
 Individual power plant’s location and fuel type.
+
 Total emissions per year.
+
 Total amount of power (gwh) generated per year.
 
 
-**Vis 1:**
+**Interactive Leaflet Map:**
+![Interactive Leaflet Map](https://github.com/JacobTrevithick/Climate-Change-Visualizations/blob/main/Images/Title_Map.png)
+
+**Clean vs. Dirty Power Plant Breakdown:**
+![Pie Chart](https://github.com/JacobTrevithick/Climate-Change-Visualizations/blob/main/Images/Pie_chart.png)
+
+**Historic GHG Emissions:**
+![Historic GHG Emissions](https://github.com/JacobTrevithick/Climate-Change-Visualizations/blob/main/Images/Greenhouse_gas_emissions.png)
+
+**Energy Producted by Power Plants:**
+![Power Plant energy production](https://github.com/JacobTrevithick/Climate-Change-Visualizations/blob/main/Images/Energy_Production_clean_v_dirty.png)
+
+**Power Plant Breakdown by Energy Type:**
+![Power Plant energy type breakdown](https://github.com/JacobTrevithick/Climate-Change-Visualizations/blob/main/Images/Power_plant_type_radar.png)
+
+**Doomsday Counter:**
 ![Doomsday Counter](https://github.com/JacobTrevithick/Climate-Change-Visualizations/blob/c63ea5cc8a825d7a65be15d0731da24d290968f7/Images/Doomsday_counter.png)
-
-
-
-**Vis 2:**
-![Earthquake Map 2](https://user-images.githubusercontent.com/74067302/143719624-f43ff691-9bcf-4f0c-a45a-d5f5ce235fd7.png)
-
-
-**Vis 3:**
-![Earthquake Map 2](https://user-images.githubusercontent.com/74067302/143719624-f43ff691-9bcf-4f0c-a45a-d5f5ce235fd7.png)
-
-**Vis 4:**
-![Earthquake Map 2](https://user-images.githubusercontent.com/74067302/143719624-f43ff691-9bcf-4f0c-a45a-d5f5ce235fd7.png)
 
 ## Getting Started
 
