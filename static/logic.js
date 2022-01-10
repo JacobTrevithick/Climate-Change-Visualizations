@@ -132,7 +132,7 @@ d3.json(flaskGlobalViewURL).then(function (response) {
     
     
     var layout = {
-        title: 'Historic GHG emission from electricity production',
+        title: 'Historic GHG emission',
         // height: 600,
         // width: 1200,
         yaxis: {
@@ -314,7 +314,7 @@ function updatePlotly() {
         
         
         var layout = {
-            title: 'Historic GHG emission from electricity production',
+            title: 'Historic GHG emission',
             // height: 600,
             // width: 1200,
             yaxis: {
