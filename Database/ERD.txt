@@ -1,48 +1,40 @@
-countries
+power_plants_info_2
 -----
-country_id INT PK
-country_long TEXT
-
-
-power_plants_info
------
-country_id INT FK >- countries.country_id
-plant_id INT PK FK - power_plant_names.plant_id
+plant_id INT PK FK - power_plant_names_2.plant_id
+fuel_id INT FK >- fuel_type_2.fuel_id
+country_id INT FK >- countries_2.country_id
 capacity_mw DECIMAL
 latitude DECIMAL
 longitude DECIMAL
-primary_fuel TEXT
+
+
+greenhouse_gases_2
+-----
+country_id INT PK FK >- countries_2.country_id
+category_short TEXT PK
+year INT PK
+value DECIMAL
+
+power_plant_gen_stats_2
+-----
+plant_id INT PK FK >- power_plant_names_2.plant_id
+year INT PK
+generation_gwh DECIMAL
+estimated_generation_gwh DECIMAL
+generation_data_source TEXT
+
+fuel_type_2
+-----
+fuel_id INT PK
+primary_fuel TEXT 
 clean_energy BOOL
 
-
-power_plant_names
+power_plant_names_2
 -----
 plant_id INT PK
 name TEXT
 
-
-power_plant_gen_stats
+countries_2
 -----
-plant_id INT PK FK - power_plant_names.plant_id
-generation_gwh_2013 DECIMAL
-generation_gwh_2014 DECIMAL
-generation_gwh_2015 DECIMAL
-generation_gwh_2016 DECIMAL
-generation_gwh_2017 DECIMAL
-generation_gwh_2018 DECIMAL
-generation_gwh_2019 DECIMAL
-generation_data_source TEXT
-estimated_generation_gwh_2013 DECIMAL
-estimated_generation_gwh_2014 DECIMAL
-estimated_generation_gwh_2015 DECIMAL
-estimated_generation_gwh_2016 DECIMAL
-estimated_generation_gwh_2017 DECIMAL
-
-
-greenhouse_gases
------
-id PK
-country_id INT FK >- countries.country_id
-category_short TEXT
-year INT
-value DECIMAL
+country_id INT PK
+country_long TEXT

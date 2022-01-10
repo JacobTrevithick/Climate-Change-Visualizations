@@ -17,7 +17,7 @@ FROM power_plants_info
 GROUP BY primary_fuel;
 
 SELECT DISTINCT year
-FROM greenhouse_gases
+FROM power_plant_gen_stats
 ORDER BY year ASC;
 
 
