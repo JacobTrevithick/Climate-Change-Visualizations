@@ -24,8 +24,6 @@ d3.json(flaskGlobalViewURL).then(function (response) {
 
 
     // Map will be drawn here using response data
-    // var powerPlantLayer = createPowerPlantsLayer(response);
-    // createMap(powerPlantLayer);
     var powerPlantLayer = createPowerPlantsLayer(response);
 
     d3.json(countryOutlineURL).then(function(geoResponse) {
@@ -449,7 +447,6 @@ function createPowerPlantsLayer(response) {
 
     for (var i = 0; i < response.map_pp_types.length; i++) {
 
-
         var primaryFuel = response.map_pp_types[i];
         var latLon = [response.map_pp_lat[i], response.map_pp_lon[i]];
         var countryName = response.map_pp_country[i];
@@ -540,8 +537,7 @@ function getGeoColor(value) {
 function onEachFeature(feature, layer) {
 
     layer.bindPopup(`<h3>Country: ${feature.properties['ADMIN']}</h3>`);
-}
-
+};
 
 
 function getColor(d) {
