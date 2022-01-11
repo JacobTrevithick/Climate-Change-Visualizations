@@ -1,7 +1,5 @@
 # Climate-Change-Visualizations
 
-# Earthquake Data Visualizations with Leaflet 
-
 Interactive map and visualizations that visualize global power plants and green house gas emissions by country. 
 
 ## Description
