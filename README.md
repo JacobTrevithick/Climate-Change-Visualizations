@@ -6,16 +6,34 @@ Interactive map and visualizations that visualize global power plants and green 
 
 We looked at data from various countries detailing greenhouse gas emissions as well as power plant information.
 
-Data includes:
+**Data includes:**
 
-Types of emissions per country per year.
+* Types of emissions per country per year.
 
-Individual power plant’s location and fuel type.
+* Individual power plant’s location and fuel type.
 
-Total emissions per year.
+* Total emissions per year.
 
-Total amount of power (gwh) generated per year.
+* Total amount of power (gwh) generated per year.
 
+### ETL Pipeline
+
+A PostgreSQL relational database is used to house the aggregated and cleaned power plant/emissions data. 
+
+First, the power plant database is pulled in and cleaned. This includes:
+
+* Dropping unneccesary columns
+* Standardizing country names
+* Catagorizing energy type (clean or dirty)
+* Converting generated/estimated power generation columns to rows using .melt() pandas method
+
+Secondly, the greenhouse gas data similarly to create matching country name formats and reducing complexity in greenhouse gas categorization.
+
+Next, IDs are created for the country name, fuel type, and plant name for database upload. This is to ensure that the DB design is closer to 3rd normal form. The database is constructed as follows:
+
+![Database Design](https://github.com/JacobTrevithick/Climate-Change-Visualizations/blob/main/Database/PostgresDBdiagram.png)
+
+The following visualizations pull from this SQL database using the Python Library SQLalchemy using an ORM (object relational mapping). Calls to the SQL database are made via a Flask app running the connection between the website and the database.
 
 **Interactive Leaflet Map:**
 
@@ -65,8 +83,12 @@ Radar chart demonstrating the breakdown of every power plant energy type. Global
 
 ### Installing
 
+* Note: must have Postgres SQL installed locally to run.
 * Clone this repository to your desktop.
 * Create virtual environment using requirements.txt for dependencies
+* Create 'config.py' file in main directory storing:
+    username = "Your_postgres_username_here"
+    password = "Your_postgres_username_here"
 * Run data_cleaning_pipeline.ipynb to create Postgres Database with cleaned data
 * Run 'python3 app.py' from cloned repo (with venv activated)
 * Copy and paste web address for localhost into web browser
