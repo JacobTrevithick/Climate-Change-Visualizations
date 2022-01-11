@@ -35,7 +35,7 @@ Next, IDs are created for the country name, fuel type, and plant name for databa
 
 The following visualizations pull from this SQL database using the Python Library SQLalchemy using an ORM (object relational mapping). Calls to the SQL database are made via a Flask app running the connection between the website and the database.
 
-### Visualizations
+## Visualizations
 
 **Interactive Leaflet Map:**
 
