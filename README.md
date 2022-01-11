@@ -37,6 +37,8 @@ Next, IDs are created for the country name, fuel type, and plant name for databa
 
 The following visualizations pull from this SQL database using the Python Library SQLalchemy using an ORM (object relational mapping). Calls to the SQL database are made via a Flask app running the connection between the website and the database.
 
+### Visualizations
+
 **Interactive Leaflet Map:**
 
 Interactivate Leaflet map showing the location and information about all the globale power plants. They are color coded based on whether they use clean or dirty sources to generate energy: green for clean and grey for dirty.
